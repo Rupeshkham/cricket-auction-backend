@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import playerRoutes from "./routes/playerRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -27,6 +28,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Routes
 app.use("/api/players", playerRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) =>
   res.send("🏏 Cricket Auction API Running ✅")

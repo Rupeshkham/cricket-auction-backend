@@ -92,3 +92,79 @@ export const auctionPlayer = async (req, res) => {
     res.status(500).json({ message: "Auction failed!", error: error.message });
   }
 };
+
+
+
+
+export const updatePlayer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, role, basePoints } = req.body;
+
+
+    const player = await Player.findById(id);
+    if (!player) {
+      return res.status(404).json({ message: "Player not found!" });
+    }
+
+    // ✅ Update text fields
+    if (name !== undefined) player.name = name;
+    if (role !== undefined) player.role = role;
+    if (basePoints !== undefined) player.basePoints = Number(basePoints);
+
+    // ✅ Update image if provided
+    if (req.file) {
+      // (optional) delete old image
+      if (player.image) {
+        const publicId = player.image.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`players/${publicId}`);
+      }
+
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "players",
+      });
+      player.image = result.secure_url;
+    }
+
+    await player.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Player updated successfully",
+      player,
+    });
+  } catch (error) {
+    console.error("Update Player Error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+// ➤ Delete Player
+export const deletePlayer = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const player = await Player.findById(id);
+    if (!player) {
+      return res.status(404).json({ message: "Player not found!" });
+    }
+
+    // If player is sold, remove from team
+    if (player.soldTo) {
+      await Team.findByIdAndUpdate(player.soldTo, {
+        $pull: { players: player._id },
+        $inc: { pointsLeft: player.price }, // points refund (optional)
+      });
+    }
+
+    await player.deleteOne();
+
+    res.status(200).json({
+      message: "Player deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

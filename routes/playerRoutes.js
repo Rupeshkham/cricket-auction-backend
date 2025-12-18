@@ -6,7 +6,10 @@ import {
   addPlayers,
   getAllPlayers,
   auctionPlayer,
+  updatePlayer,
+  deletePlayer,
 } from "../controllers/playerController.js";
+import { adminOnly, protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -24,8 +27,10 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 // ➤ Routes
-router.post("/add", upload.single("image"), addPlayers); // ☁️ Cloudinary
+router.post("/add", protect, adminOnly, upload.single("image"), addPlayers);
+router.put("/:id", protect, adminOnly,   upload.single("image"), updatePlayer);
+router.delete("/:id", protect, adminOnly, deletePlayer);
 router.get("/", getAllPlayers);
-router.post("/auction", auctionPlayer);
+router.post("/auction", protect, adminOnly, auctionPlayer);
 
 export default router;
