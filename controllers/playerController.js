@@ -2,15 +2,25 @@ import Player from "../models/Player.js";
 import Team from "../models/Team.js";
 
 // ➤ Add single player
+import cloudinary from "../config/cloudinary.js";
+
 export const addPlayers = async (req, res) => {
   try {
     const { name, role, basePoints } = req.body;
-     console.log("req.file.path", req.file.path, name, role, basePoints);
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Image is required" });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "players",
+    });
+
     const player = await Player.create({
       name,
       role,
       basePoints,
-      image: req.file.path, // 🔥 Cloudinary URL
+      image: result.secure_url, // ✅ CLOUDINARY URL
     });
 
     res.status(201).json(player);
@@ -18,6 +28,7 @@ export const addPlayers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // ➤ Get all players
 export const getAllPlayers = async (req, res) => {
