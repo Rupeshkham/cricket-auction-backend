@@ -8,6 +8,8 @@ import {
   auctionPlayer,
   updatePlayer,
   deletePlayer,
+  updateSoldPlayer,
+  unsoldPlayer,
 } from "../controllers/playerController.js";
 import { adminOnly, protect } from "../middleware/auth.js";
 
@@ -32,5 +34,7 @@ router.put("/:id", protect, adminOnly,   upload.single("image"), updatePlayer);
 router.delete("/:id", protect, adminOnly, deletePlayer);
 router.get("/", getAllPlayers);
 router.post("/auction", protect, adminOnly, auctionPlayer);
+router.put("/update-sold/:id", protect, adminOnly, updateSoldPlayer);
+router.delete("/unsold/:id", protect, adminOnly, unsoldPlayer);
 
 export default router;

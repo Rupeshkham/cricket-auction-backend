@@ -168,3 +168,61 @@ export const deletePlayer = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+// PUT /api/players/update-sold/:id
+export const updateSoldPlayer = async (req, res) => {
+  try {
+    const { teamId, price } = req.body;
+    const player = await Player.findById(req.params.id);
+    if (!player || !player.soldTo)
+      return res.status(404).json({ message: "Sold player not found" });
+
+    const oldTeam = await Team.findById(player.soldTo);
+    const newTeam = await Team.findById(teamId);
+
+    // rollback old team
+    oldTeam.players.pull(player._id);
+    oldTeam.pointsLeft += player.price;
+    await oldTeam.save();
+
+    // assign new team
+    if (newTeam.pointsLeft < price)
+      return res.status(400).json({ message: "Not enough points" });
+
+    newTeam.players.push(player._id);
+    newTeam.pointsLeft -= price;
+    await newTeam.save();
+
+    player.soldTo = teamId;
+    player.price = price;
+    await player.save();
+
+    res.json({ message: "Sold player updated", player });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+
+// DELETE /api/players/unsold/:id
+export const unsoldPlayer = async (req, res) => {
+  try {
+    const player = await Player.findById(req.params.id);
+    if (!player || !player.soldTo)
+      return res.status(404).json({ message: "Not sold" });
+
+    const team = await Team.findById(player.soldTo);
+    team.players.pull(player._id);
+    team.pointsLeft += player.price;
+    await team.save();
+
+    player.soldTo = null;
+    player.price = 0;
+    await player.save();
+
+    res.json({ message: "Player unsold successfully" });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
