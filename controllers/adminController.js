@@ -2,18 +2,18 @@ import Admin from "../models/Admin.js";
 import jwt from "jsonwebtoken";
 
 export const registerAdmin = async (req, res) => {
-  const { email, password } = req.body;
+  const {name, email, password } = req.body;
 
   const adminExist = await Admin.findOne({ email });
   if (adminExist) {
     return res.status(400).json({ message: "Admin already exists" });
   }
 
-  const admin = await Admin.create({ email, password });
+  const admin = await Admin.create({name, email, password });
 
   res.status(201).json({
     message: "Admin created successfully",
-    admin: admin.email,
+    admin: admin.name,
   });
 };
 
@@ -33,8 +33,11 @@ export const adminLogin = async (req, res) => {
     { expiresIn: "1d" }
   );
 
-  res.json({
-    token,
-    role: "admin",
-  });
+ res.json({
+  token,
+  user: {
+    name: admin.name,
+    email: admin.email,
+  },
+});
 };

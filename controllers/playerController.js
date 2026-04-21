@@ -29,7 +29,6 @@ export const addPlayers = async (req, res) => {
   }
 };
 
-
 // ➤ Get all players
 export const getAllPlayers = async (req, res) => {
   try {
@@ -61,6 +60,12 @@ export const auctionPlayer = async (req, res) => {
     if (player.soldTo) {
       return res.status(400).json({ message: "Player already sold!" });
     }
+    // Check team player limit
+    if (team.players.length >= team.maxPlayers) {
+      return res.status(400).json({
+        message: "Team already has maximum players!",
+      });
+    }
 
     // Check team has enough points
     if (team.pointsLeft < price) {
@@ -80,12 +85,19 @@ export const auctionPlayer = async (req, res) => {
     await team.save();
 
     // Re-fetch populated player for frontend clarity
-    const updatedPlayer = await Player.findById(player._id).populate("soldTo", "name owner pointsLeft");
+    const updatedPlayer = await Player.findById(player._id).populate(
+      "soldTo",
+      "name owner pointsLeft",
+    );
 
+  
     res.status(200).json({
       message: `${player.name} sold to ${team.name} for ${price} points!`,
       player: updatedPlayer,
-      updatedTeam: team,
+      updatedTeam: {
+    ...team._doc,
+    remainingPlayers: team.maxPlayers - team.players.length
+  }
     });
   } catch (error) {
     console.error("Auction Error:", error);
@@ -93,14 +105,10 @@ export const auctionPlayer = async (req, res) => {
   }
 };
 
-
-
-
 export const updatePlayer = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, role, basePoints } = req.body;
-
 
     const player = await Player.findById(id);
     if (!player) {
@@ -139,8 +147,6 @@ export const updatePlayer = async (req, res) => {
   }
 };
 
-
-
 // ➤ Delete Player
 export const deletePlayer = async (req, res) => {
   try {
@@ -168,7 +174,6 @@ export const deletePlayer = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // PUT /api/players/update-sold/:id
 export const updateSoldPlayer = async (req, res) => {
@@ -203,7 +208,6 @@ export const updateSoldPlayer = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
-
 
 // DELETE /api/players/unsold/:id
 export const unsoldPlayer = async (req, res) => {

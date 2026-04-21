@@ -6,7 +6,7 @@ import Player from "../models/Player.js";
 // Create team
 export const createTeam = async (req, res) => {
   try {
-    const { name, owner, pointsLeft } = req.body;
+    const { name, owner, pointsLeft, maxPlayers } = req.body;
 
     // Validation
     if (!name || !owner) {
@@ -14,7 +14,7 @@ export const createTeam = async (req, res) => {
     }
 
     // Create new team
-    const team = await Team.create({ name, owner, pointsLeft });
+    const team = await Team.create({ name, owner, pointsLeft, maxPlayers });
 
     res.status(201).json(team);
   } catch (error) {
@@ -38,7 +38,7 @@ export const getTeams = async (req, res) => {
 export const updateTeam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, owner, pointsLeft } = req.body;
+    const { name, owner, pointsLeft, maxPlayers} = req.body;
 
     const team = await Team.findById(id);
     if (!team) {
@@ -48,6 +48,7 @@ export const updateTeam = async (req, res) => {
     if (name) team.name = name;
     if (owner) team.owner = owner;
     if (pointsLeft !== undefined) team.pointsLeft = pointsLeft;
+    if (maxPlayers !== undefined) team.maxPlayers = maxPlayers;
 
     await team.save();
 
